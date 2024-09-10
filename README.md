@@ -165,6 +165,155 @@ $cat->play(); // Output: The cat is playing.
 ### When to Use Interfaces
 Interfaces are ideal when you want to enforce that a class implements a specific set of methods, but without dictating how they should be implemented. They are particularly useful when different classes, possibly from unrelated hierarchies, need to follow the same contract. For example, both a `Cat` and a `RobotDog` might implement a `PetInterface` to ensure they have a `play()` method, even though they belong to different categories.
 
+### Let's look at the real-world application:
+In the following example, we will show you how to use the interface to make the system more flexible and easier to extend. Suppose you have to create a logger that can log a message.
+
+First, create an interface called `Logger` as follows:
+
+```php
+interface Logger
+{
+	public function log($message);
+}
+```
+
+Second, create a `FileLogger` class that writes the log messages to a file:
+
+```php
+interface Logger
+{
+	public function log($message);
+}
+
+class FileLogger implements Logger
+{
+	private $handle;
+
+	private $logFile;
+
+	public function __construct($filename, $mode = 'a')
+	{
+		$this->logFile = $filename;
+		// open log file for append
+		$this->handle = fopen($filename, $mode)
+				or die('Could not open the log file');
+	}
+
+	public function log($message)
+	{
+		$message = date('F j, Y, g:i a') . ': ' . $message . "\n";
+		fwrite($this->handle, $message);
+	}
+
+	public function __destruct()
+	{
+		if ($this->handle) {
+			fclose($this->handle);
+		}
+	}
+}
+```
+
+Third, use the `FileLogger` class as follows:
+
+```php
+$logger = new FileLogger('./log.txt', 'w');
+$logger->log('PHP interfae is awesome');
+```
+
+The following adds another logger that logs information to the database. For demonstration purposes, we make the `DatabaseLogger` class as simple as possible:
+
+```php
+class DatabaseLogger implements Logger
+{
+	public function log($message)
+	{
+		echo sprintf("Log %s to the database\n", $message);
+	}
+}
+
+```
+
+And you can easily add other kinds of loggers that implement the `Logger` interface without touching existing loggers.
+
+The following code snippet demonstrates how to use multiple loggers at the same time using a single `ILogger` interface:
+
+```php
+
+$loggers = [
+	new FileLogger('./log.txt'),
+	new DatabaseLogger()
+];
+
+foreach ($loggers as $logger) {
+	$logger->log('Log message');
+}
+
+```
+
+Put it all together.
+
+```php
+
+interface Logger
+{
+	public function log($message);
+}
+
+class FileLogger implements Logger
+{
+	private $handle;
+
+	private $logFile;
+
+	public function __construct($filename, $mode = 'a')
+	{
+		$this->logFile = $filename;
+		// open log file for append
+		$this->handle = fopen($filename, $mode)
+				or die('Could not open the log file');
+	}
+
+	public function log($message)
+	{
+		$message = date('F j, Y, g:i a') . ': ' . $message . "\n";
+		fwrite($this->handle, $message);
+	}
+
+	public function __destruct()
+	{
+		if ($this->handle) {
+			fclose($this->handle);
+		}
+	}
+}
+
+class DatabaseLogger implements Logger
+{
+	public function log($message)
+	{
+		echo sprintf("Log %s to the database\n", $message);
+	}
+}
+
+// examle 1
+$logger = new FileLogger('./log.txt', 'w');
+$logger->log('PHP interfae is awesome');
+
+// example 2
+$loggers = [
+	new FileLogger('./log.txt'),
+	new DatabaseLogger()
+];
+
+foreach ($loggers as $logger) {
+	$logger->log('Log message');
+}
+
+```
+Note that in the real-world application, you should separate interfaces and classes in separate files.
+
+
 ## Differences Between Abstract Classes and Interfaces
 
 | Aspect                     | Abstract Class                  | Interface                            |
